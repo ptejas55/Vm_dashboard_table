@@ -1,49 +1,11 @@
-import React from 'react';
-import { GridFilterItem } from '@mui/x-data-grid';
-
-interface FilterRowProps {
-  columns: any[];
-  onFilterChange: (filter: GridFilterItem) => void;
-}
-
-const FilterRow: React.FC<FilterRowProps> = ({ columns, onFilterChange }) => {
-  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>, column: any) => {
-    const filter: GridFilterItem = {
-      columnField: column.field,
-      operatorValue: 'contains',
-      value: e.target.value.trim(),
-    };
-    onFilterChange(filter);
-  };
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginBottom: '8px' }}>
-      {columns.map(column => (
-        <div key={column.field} style={{ marginRight: '8px' }}>
-          <input
-            type="text"
-            placeholder={`Filter ${column.headerName}`}
-            onChange={(e) => handleFilterChange(e, column)}
-            style={{ padding: '4px' }}
-          />
-        </div>
-      ))}
-    </div>
-  );
-};
-
-export default FilterRow;
-
-
----------------------------------------
-  import React, { useState, useEffect } from 'react';
-import { DataGrid, GridColDef, GridFilterItem } from '@mui/x-data-grid';
+import React, { useState, useEffect } from 'react';
+import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import axios from 'axios';
-import FilterRow from './FilterRow';
 
 const DataGridComponent: React.FC = () => {
   const [rows, setRows] = useState<any[]>([]);
   const [filteredRows, setFilteredRows] = useState<any[]>([]);
+  const [filters, setFilters] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     fetchData();
@@ -59,14 +21,19 @@ const DataGridComponent: React.FC = () => {
     }
   };
 
-  const handleFilterChange = (filter: GridFilterItem) => {
+  const handleFilterChange = (field: string, value: string) => {
+    setFilters({ ...filters, [field]: value });
+  };
+
+  useEffect(() => {
     const filteredData = rows.filter(row => {
-      if (!filter.value) return true;
-      const cellValue = row[filter.columnField] as string;
-      return cellValue.toLowerCase().includes(filter.value.toLowerCase());
+      return Object.entries(filters).every(([field, value]) => {
+        const cellValue = row[field] as string;
+        return cellValue.toLowerCase().includes(value.toLowerCase());
+      });
     });
     setFilteredRows(filteredData);
-  };
+  }, [filters, rows]);
 
   const columns: GridColDef[] = [
     { field: 'id', headerName: 'ID', width: 100 },
@@ -79,11 +46,20 @@ const DataGridComponent: React.FC = () => {
 
   return (
     <div style={{ height: 400, width: '100%' }}>
-      <FilterRow columns={columns} onFilterChange={handleFilterChange} />
+      <div style={{ marginBottom: '8px' }}>
+        {columns.map(column => (
+          <input
+            key={column.field}
+            type="text"
+            placeholder={`Filter ${column.headerName}`}
+            onChange={(e) => handleFilterChange(column.field, e.target.value)}
+            style={{ marginRight: '8px', padding: '4px' }}
+          />
+        ))}
+      </div>
       <DataGrid rows={filteredRows} columns={columns} pageSize={5} />
     </div>
   );
 };
 
 export default DataGridComponent;
-

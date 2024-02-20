@@ -44,19 +44,23 @@ const DataGridComponent: React.FC = () => {
     // Add more columns as needed
   ];
 
+  const filterRow = (
+    <div style={{ display: 'flex', flexDirection: 'row', marginBottom: '8px' }}>
+      {columns.map(column => (
+        <input
+          key={column.field}
+          type="text"
+          placeholder={`Filter ${column.headerName}`}
+          onChange={(e) => handleFilterChange(column.field, e.target.value)}
+          style={{ marginRight: '8px', padding: '4px' }}
+        />
+      ))}
+    </div>
+  );
+
   return (
     <div style={{ height: 400, width: '100%' }}>
-      <div style={{ marginBottom: '8px' }}>
-        {columns.map(column => (
-          <input
-            key={column.field}
-            type="text"
-            placeholder={`Filter ${column.headerName}`}
-            onChange={(e) => handleFilterChange(column.field, e.target.value)}
-            style={{ marginRight: '8px', padding: '4px' }}
-          />
-        ))}
-      </div>
+      <div>{filterRow}</div>
       <DataGrid rows={filteredRows} columns={columns} pageSize={5} />
     </div>
   );
